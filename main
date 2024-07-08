@@ -1,0 +1,71 @@
+# Import
+from flask import Flask, render_template,request, redirect
+# Collegare la libreria del database
+from flask_sqlalchemy import SQLAlchemy
+
+
+app = Flask(__name__)
+# Connettere SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///diary.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Creare il DB
+db = SQLAlchemy(app)
+# Creare la tabella
+
+class Feedback(db.Model):
+    # Creazione delle colonne
+    # id
+    id = db.Column(db.Integer, primary_key=True, autoincrement= True)
+    # Titolo
+    email = db.Column(db.String(100), nullable=False)
+
+    text = db.Column(db.String(300), nullable=False)
+
+    
+    
+    def __repr__(self):
+        return f'<Feedback {self.id}>'
+    
+@app.route('/reg', methods=['GET','POST'])
+def reg():
+    if request.method == 'POST':
+        login= request.form['email']
+        text = request.form['text']
+        user = Feedback.query.filter_by(login=login).first()
+        user = Feedback(login=login, text=text)
+        db.session.add(user)
+        db.session.commit()
+        return redirect('/')
+
+    
+# Esecuzione della pagina dei contenuti
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+# Competenze dinamiche
+@app.route('/', methods=['POST'])
+def process_form():
+    if request.method == 'POST':
+        button_python = request.form.get('button_python')
+        button_discord = request.form.get('button_discord')
+        button_html = request.form.get('button_html')
+        button_db = request.form.get('button_db')
+        if button_python or button_discord or button_html or button_db:
+            return render_template(
+                'index.html', 
+                button_python=button_python,
+                button_discord=button_discord,
+                button_html=button_html,
+                button_db=button_db
+                )
+        email = request.form.get('email')
+        text = request.form.get('text')
+        if email and text:
+            print(email, text)
+            return render_template('index.html')
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
